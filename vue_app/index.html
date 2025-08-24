@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vue Flutter 双方向通信デモ</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    
+    <!-- Flutter通信用のJavaScriptブリッジ -->
+    <script>
+      // Flutter側と通信するためのブリッジ関数
+      window.flutterBridge = {
+        // Flutter側のカウント関数を呼び出す
+        callFlutterIncrement: async function() {
+          try {
+            console.log('Flutter関数呼び出し開始...');
+            
+            // flutter_inappwebviewのJavaScriptHandlerを使用
+            if (window.flutter_inappwebview) {
+              const result = await window.flutter_inappwebview.callHandler('incrementCounter');
+              console.log('Flutter関数呼び出し結果:', result);
+              return result;
+            } else {
+              console.warn('Flutter bridge not available');
+              return null;
+            }
+          } catch (error) {
+            console.error('Flutter関数呼び出しエラー:', error);
+            return null;
+          }
+        }
+      };
+
+      // Flutter側からの通知を受け取るコールバック
+      window.onFlutterCountUpdate = function(count) {
+        console.log('Flutter側からカウント更新通知:', count);
+        
+        // Vue.jsアプリに通知（カスタムイベント発行）
+        window.dispatchEvent(new CustomEvent('flutterCountUpdate', { 
+          detail: { count: count } 
+        }));
+      };
+
+      // 初期化関数（Flutter側から呼ばれる）
+      window.initFlutterBridge = function() {
+        console.log('Flutter bridge初期化完了');
+      };
+    </script>
+    
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
